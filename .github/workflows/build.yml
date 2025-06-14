@@ -57,21 +57,6 @@ jobs:
         if: matrix.platform == 'linux'
         run: npm ci
 
-      - name: Debug Windows environment
-        if: matrix.platform == 'win'
-        shell: cmd
-        run: |
-          echo "Node version:"
-          node --version
-          echo "NPM version:"
-          npm --version
-          echo "Checking vite installation:"
-          npm list vite
-          echo "Checking if vite command exists:"
-          where vite || echo "vite command not found"
-          echo "Checking npx vite:"
-          npx vite --version || echo "npx vite failed"
-
       - name: Build for Linux
         if: matrix.platform == 'linux'
         run: npx vite build && npx electron-builder --linux --publish=never
