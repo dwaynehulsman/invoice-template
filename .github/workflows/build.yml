@@ -58,21 +58,21 @@ jobs:
 
       - name: Build for Linux
         if: matrix.platform == 'linux'
-        run: npm run electron:dist:linux
+        run: npx vite build && npx electron-builder --linux --publish=never
 
       - name: Build for Windows
         if: matrix.platform == 'win'
-        run: npm run electron:dist:win
+        run: npx vite build && npx electron-builder --win --publish=never
 
       - name: Build for macOS x64
         if: matrix.platform == 'mac' && matrix.arch == 'x64'
-        run: npm run electron:dist:mac
+        run: npx vite build && npx electron-builder --mac --publish=never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
       - name: Build for macOS ARM64
         if: matrix.platform == 'mac' && matrix.arch == 'arm64'
-        run: npm run build && npx electron-builder --mac --arm64 --publish=never
+        run: npx vite build && npx electron-builder --mac --arm64 --publish=never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
