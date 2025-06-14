@@ -43,37 +43,55 @@ jobs:
           npm cache clean --force
           npm install
 
-      - name: Clear npm cache and reinstall (Windows fix)
+      - name: Fix Windows build environment
         if: matrix.platform == 'win'
-        shell: cmd
+        shell: powershell
         run: |
-          if exist node_modules rmdir /s /q node_modules
-          if exist package-lock.json del package-lock.json
-          if exist yarn.lock del yarn.lock
-          npm cache clean --force
-          npm install
+          # Remove problematic files
+          if (Test-Path "node_modules") { Remove-Item -Recurse -Force "node_modules" }
+          if (Test-Path "package-lock.json") { Remove-Item -Force "package-lock.json" }
+          if (Test-Path "yarn.lock") { Remove-Item -Force "yarn.lock" }
 
-      - name: Install dependencies
+          # Clear npm cache completely
+          npm cache clean --force
+          npm cache verify
+
+          # Set npm configuration for Windows
+          npm config set fund false
+          npm config set audit false
+          npm config set progress false
+
+          # Install with specific flags for Windows
+          npm install --no-optional --no-fund --no-audit
+
+          # Verify installation
+          npm list --depth=0
+
+      - name: Install dependencies (Linux)
         if: matrix.platform == 'linux'
         run: npm ci
 
       - name: Build for Linux
         if: matrix.platform == 'linux'
-        run: npx vite build && npx electron-builder --linux --publish=never
+        run: npm run build && npm run electron:dist:linux
 
       - name: Build for Windows
         if: matrix.platform == 'win'
-        run: npx vite build && npx electron-builder --win --publish=never
+        shell: powershell
+        run: |
+          # Use Windows-specific config to avoid ESM module resolution issues
+          npx vite build --config vite.config.windows.js
+          npm run electron:dist:win
 
       - name: Build for macOS x64
         if: matrix.platform == 'mac' && matrix.arch == 'x64'
-        run: npx vite build && npx electron-builder --mac --publish=never
+        run: npm run build && npm run electron:dist:mac
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
       - name: Build for macOS ARM64
         if: matrix.platform == 'mac' && matrix.arch == 'arm64'
-        run: npx vite build && npx electron-builder --mac --arm64 --publish=never
+        run: npm run build && npx electron-builder --mac --arm64 --publish=never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
